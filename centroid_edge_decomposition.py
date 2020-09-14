@@ -9,7 +9,36 @@ try:
 except ImportError:
     from Queue import Queue  # python 2
 # from tree import PhylogeneticTree
-from sepp import get_logger
+import logging
+import os
+
+_DEBUG = ("SEPP_DEBUG" in os.environ) and \
+    (os.environ["SEPP_DEBUG"].lower() == "true")
+
+
+def get_logging_level():
+    return logging.DEBUG if _DEBUG else logging.INFO
+
+
+__set_loggers = set()
+
+
+def get_logger(name="sepp"):
+    logger = logging.getLogger(name)
+    if name not in __set_loggers:
+        level = get_logging_level()
+        logging_formatter = logging.Formatter(
+            ("[%(asctime)s] %(filename)s (line %(lineno)d):"
+             " %(levelname) 8s: %(message)s"))
+        logging_formatter.datefmt = '%H:%M:%S'
+        logger.setLevel(level)
+        ch = logging.StreamHandler()
+        ch.setLevel(level)
+        ch.setFormatter(logging_formatter)
+        logger.addHandler(ch)
+        __set_loggers.add(name)
+    return logger
+
 
 _LOG = get_logger(__name__)
 
@@ -241,9 +270,6 @@ def decompose_tree(tree, maxSize, strategy, minSize=None, tree_map={},
                 tree, strategy=decomp_strategy, max_size=maxSize,
                 max_diam=maxDiam, min_size=minSize)
             return tl
-
-
-        ##############
 
 
 if __name__ == "__main__":
